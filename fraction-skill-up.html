@@ -121,8 +121,8 @@ var DENOMS=[4,5,6,8,10];
 /* ---- helper: exact fraction string ---- */
 function fracStr(n,d){ return n+"/"+d; }
 
-/* ---- Q type A: 短除法 GCD ---- */
-function genGcdQ(){
+/* ---- Q type A: 最大公因數 HCF（短除法）---- */
+function genHcfQ(){
   var a,b,g,tries=0;
   do{
     g=ri(2,6);
@@ -140,23 +140,54 @@ function genGcdQ(){
   wrongs=shuffle(wrongs).slice(0,2);
   while(wrongs.length<2){ var cand=g+wrongs.length; if(!wrongSet[cand]){ wrongSet[cand]=1; wrongs.push(cand);} }
   var all=shuffle([g].concat(wrongs));
-  return {type:"gcd", nums:{a:a,b:b,g:g},
-    qtext:"用短除法找出 "+a+" 同 "+b+" 嘅最大公因數（GCD）。",
+  return {type:"hcf", nums:{a:a,b:b,g:g},
+    qtext:"用短除法找出 "+a+" 同 "+b+" 嘅最大公因數（HCF）。",
     hintText:"💡 提示：短除法用公因數一步步除（2、3、…），除到互質為止，左邊除數全部乘起。試吓 "+a+" ÷ "+g+" = "+(a/g)+"，"+b+" ÷ "+g+" = "+(b/g)+"。",
     opts:all.map(String), ans:all.indexOf(g),
-    review:"GCD("+a+","+b+") = "+g};
+    review:"HCF("+a+","+b+") = "+g};
 }
 function lcmOf(a,b){ return a*b/gcd(a,b); }
 
-/* ---- Q type B: 通分（等值分數）---- */
+/* ---- Q type B: 搵公分母（LCM 最小公倍數）---- */
+function genLcmQ(){
+  var d1=pick(DENOMS), d2, L, tries=0;
+  do{
+    d2=pick(DENOMS);
+    L=lcmOf(d1,d2);
+    tries++;
+  }while((d2===d1 || L===d1 || L===d2) && tries<100); // neither denominator may itself be the LCM
+  if(d2===d1 || L===d1 || L===d2){ d1=4; d2=6; L=12; }
+  var h=gcd(d1,d2);
+  var correct=String(L);
+  var wrongSet={}; wrongSet[correct]=1;
+  var wrongs=[];
+  function addN(x){ var s=String(x); if(x>0 && s!==correct && !wrongSet[s] && !(x%d1===0 && x%d2===0)){ wrongSet[s]=1; wrongs.push(s); } }
+  addN(d1*d2);            // 經典錯：直接相乘（唔係最小）
+  addN(Math.max(d1,d2));  // 經典錯：當其中一個分母係倍數先啱
+  addN(h);                // 混淆 HCF 同 LCM
+  addN(L+d1);
+  addN(Math.abs(d1-d2));
+  addN(d1+d2);
+  wrongs=shuffle(wrongs).slice(0,2);
+  var kk=1;
+  while(wrongs.length<2 && kk<60){ addN(L+kk); kk++; }
+  var all=shuffle([correct].concat(wrongs));
+  return {type:"lcm", nums:{d1:d1,d2:d2,L:L,h:h},
+    qtext:"兩個分數嘅分母係 "+d1+" 同 "+d2+"，佢哋嘅公分母（LCM 最小公倍數）係幾多？",
+    hintText:"💡 提示：秘訣 LCM = "+d1+" × "+d2+" ÷ HCF。HCF("+d1+","+d2+") = "+h+"，所以 "+d1+" × "+d2+" ÷ "+h+" = "+L,
+    opts:all, ans:all.indexOf(correct),
+    review:"LCM("+d1+","+d2+") = "+d1+"×"+d2+"÷"+h+" = "+L};
+}
+
+/* ---- Q type C: 通分（等值分數）---- */
 function genRenameQ(){
   var d1=pick(DENOMS), d2, L, tries=0;
   do{
     d2=pick(DENOMS);
     L=lcmOf(d1,d2);
     tries++;
-  }while((d2===d1 || L===d1) && tries<100);  // need a real 擴分: L must exceed d1
-  if(d2===d1 || L===d1){ d1=4; d2=6; L=12; } // guaranteed fallback
+  }while((d2===d1 || L===d1) && tries<100);
+  if(d2===d1 || L===d1){ d1=4; d2=6; L=12; }
   var n1=ri(1,d1-1);
   var factor=L/d1;
   var correctN=n1*factor;
@@ -173,51 +204,17 @@ function genRenameQ(){
   while(wrongs.length<2 && kk<40){ addW(fracStr(correctN+kk,L)); kk++; }
   var all=shuffle([correct].concat(wrongs));
   return {type:"rename", nums:{n1:n1,d1:d1,d2:d2,L:L,factor:factor},
-    qtext:"把 "+n1+"/"+d1+" 通分成分母係 "+L+" 嘅等值分數。（為 "+n1+"/"+d1+" 同 ?/"+d2+" 找公分母 "+L+"）",
+    qtext:"把 "+n1+"/"+d1+" 通分成分母係 "+L+" 嘅等值分數。（公分母 LCM = "+L+"）",
     hintText:"💡 提示：分母 "+d1+" 要乘 "+factor+" 先變成 "+L+"，所以分子都要乘 "+factor+"："+n1+" × "+factor+" = "+correctN,
     opts:all, ans:all.indexOf(correct),
     review:n1+"/"+d1+" = ("+n1+"×"+factor+")/("+d1+"×"+factor+") = "+correctN+"/"+L};
 }
 
-/* ---- Q type C: 分數減法 ---- */
-function genSubQ(){
-  var d1,d2,L,n1,n2,num,tries=0;
-  do{
-    d1=pick(DENOMS);
-    do{ d2=pick(DENOMS); }while(d2===d1);
-    L=lcmOf(d1,d2);
-    n1=ri(1,d1-1); n2=ri(1,d2-1);
-    num=n1*(L/d1) - n2*(L/d2);
-    tries++;
-  }while((num<=0 || gcd(num,L)!==1) && tries<300);
-  if(num<=0 || gcd(num,L)!==1){ // guaranteed fallback: 3/4 − 2/5 = 7/20
-    d1=4;d2=5;L=20;n1=3;n2=2;num=7;
-  }
-  var correct=fracStr(num,L);
-  var wrongSet={}; wrongSet[correct]=1;
-  var wrongs=[];
-  function addW2(s){ if(s!==correct && !wrongSet[s] && /^\d+\/\d+$/.test(s) && +s.split('/')[0]>0){ wrongSet[s]=1; wrongs.push(s); } }
-  addW2(fracStr(n1-n2>0?n1-n2:Math.abs(n1-n2)+1, L));  // 近似「分子減分子」錯
-  addW2(fracStr(num, d1*d2));                           // 公分母用錯（直接相乘但已約?）d1*d2 可能=lcm*...
-  if(d1*d2!==L) addW2(fracStr(num+(L/d1),L));           // 擴分計多咗
-  addW2(fracStr(Math.max(1,num-1),L));
-  addW2(fracStr(num+1,L));
-  wrongs=shuffle(wrongs).slice(0,2);
-  var k=2;
-  while(wrongs.length<2 && k<30){ addW2(fracStr(num+k,L)); k++; }
-  var all=shuffle([correct].concat(wrongs));
-  return {type:"sub", nums:{n1:n1,d1:d1,n2:n2,d2:d2,L:L,num:num},
-    qtext:"計一計：先通分，再減（分母不變，只減分子）。",
-    hintText:"💡 提示：公分母係 "+L+"。"+n1+"/"+d1+" = "+(n1*(L/d1))+"/"+L+"，"+n2+"/"+d2+" = "+(n2*(L/d2))+"/"+L+"，然後 "+(n1*(L/d1))+" − "+(n2*(L/d2))+" = "+num,
-    opts:all, ans:all.indexOf(correct),
-    review:n1+"/"+d1+" − "+n2+"/"+d2+" = "+(n1*(L/d1))+"/"+L+" − "+(n2*(L/d2))+"/"+L+" = "+num+"/"+L};
-}
-
 function genQuestion(i){
   var r=i%10;
-  if(r<4) return genGcdQ();
-  if(r<7) return genRenameQ();
-  return genSubQ();
+  if(r<3) return genHcfQ();
+  if(r<7) return genLcmQ();
+  return genRenameQ();
 }
 /* ============ GEN-END ============ */
 
@@ -285,11 +282,11 @@ function screenStart(){
   '<div class="card">'+
     '<div class="fdbwa"><span style="background:#3d7bfd">F</span><span style="background:#ff5d5d">D</span><span style="background:#ff9d3d">B</span><span style="background:#3ecf6e">W</span><span style="background:#a06bff">A</span></div>'+
     '<div class="badge">🏫 五邑工商總會學校 FDBWA · 小學數學 Primary Maths · P5C</div>'+
-    '<h1>分數通分小遊戲<small>Fraction Skill-Up! 短除法 · 通分 · 分數減法 💪</small></h1>'+
-    '<div class="rules">🎯 <b>點樣玩：</b>每題撳正確答案，配合工作紙內容。<br>'+
-    '🔵 <b>短除法 GCD 題：</b>用短除法搵最大公因數<br>'+
-    '🟢 <b>通分題：</b>把分數擴分成指定公分母<br>'+
-    '🟣 <b>分數減法題：</b>先通分，再減分子<br>'+
+    '<h1>分數通分小遊戲<small>Fraction Skill-Up! 搵公分母 · LCM 最小公倍數 💪</small></h1>'+
+    '<div class="rules">🎯 <b>點樣玩：</b>每題撳正確答案，重點係搵公分母。<br>'+
+    '🔵 <b>HCF 題：</b>用短除法搵最大公因數<br>'+
+    '🟢 <b>公分母 LCM 題：</b>搵兩個分母嘅最小公倍數<br>'+
+    '🟣 <b>通分題：</b>把分數擴分成公分母<br>'+
     '❤️ 5 粒心心 · ⏰ 每題 40 秒 · 💡 每題可撳「攞提示」· 共 10 題</div>'+
     '<div style="margin-top:8px;font-size:14px;color:#8a7b6d;">累積星數 ⭐ '+TOTAL_STARS+'</div>'+
     '<button class="bigbtn" id="startbtn">開始遊戲 🚀</button>'+
@@ -318,14 +315,14 @@ function pipsHTML(){
 function showQuestion(){
   locked=false; timeLeft=PER_Q;
   var q=questions[qi];
-  var typeName = q.type==="gcd" ? "🔵 短除法 GCD 題" : (q.type==="rename" ? "🟢 通分題" : "🟣 分數減法題");
+  var typeName = q.type==="hcf" ? "🔵 最大公因數 HCF 題" : (q.type==="lcm" ? "🟢 公分母 LCM 題" : "🟣 通分題");
   var exprLine;
-  if(q.type==="gcd"){
+  if(q.type==="hcf"){
     exprLine = '<div id="expr">'+q.nums.a+' 同 '+q.nums.b+'</div>';
-  }else if(q.type==="rename"){
-    exprLine = '<div id="expr">'+optHTML(q.nums.n1+'/'+q.nums.d1)+' <span class="op">→</span> ?/'+q.nums.L+'</div>';
+  }else if(q.type==="lcm"){
+    exprLine = '<div id="expr">分母 '+q.nums.d1+' 同 '+q.nums.d2+'</div>';
   }else{
-    exprLine = '<div id="expr">'+optHTML(q.nums.n1+'/'+q.nums.d1)+' <span class="op">−</span> '+optHTML(q.nums.n2+'/'+q.nums.d2)+' <span class="op">=</span> ?</div>';
+    exprLine = '<div id="expr">'+optHTML(q.nums.n1+'/'+q.nums.d1)+' <span class="op">→</span> ?/'+q.nums.L+'</div>';
   }
   var hintLine = '';
   app.innerHTML =
@@ -415,9 +412,9 @@ function endRound(){
   var reviewHTML="";
   questions.forEach(function(q,i){
     if(!firstTry[i]){
-      var exprTxt = q.type==="gcd" ? (q.nums.a+" 同 "+q.nums.b+" 嘅 GCD")
-                  : q.type==="rename" ? (q.nums.n1+"/"+q.nums.d1+" 通分成 /"+q.nums.L)
-                  : (q.nums.n1+"/"+q.nums.d1+" − "+q.nums.n2+"/"+q.nums.d2);
+      var exprTxt = q.type==="hcf" ? (q.nums.a+" 同 "+q.nums.b+" 嘅 HCF")
+                  : q.type==="lcm" ? ("分母 "+q.nums.d1+" 同 "+q.nums.d2+" 嘅公分母")
+                  : (q.nums.n1+"/"+q.nums.d1+" 通分成 /"+q.nums.L);
       reviewHTML+='<div class="rv-item">'+ (i+1) +'. '+exprTxt+'<br><span class="rv-ok">✔ 正解：'+q.review+'</span></div>';
     }
   });
