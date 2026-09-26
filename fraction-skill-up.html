@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>五邑工商總會學校 FDBWA · 分數通分小遊戲 P5</title>
+<style>
+:root{
+  --cream:#fff8ec; --ink:#3a2f28; --card:#ffffff;
+  --blue:#3d7bfd; --blue-edge:#2a5cd0;
+  --orange:#ff9d3d; --orange-edge:#e07c1a;
+  --green:#3ecf6e; --green-edge:#2ba352;
+  --red:#ff5d5d; --red-edge:#d43c3c;
+  --purple:#a06bff; --purple-edge:#7c48d8;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent; margin:0; padding:0;}
+html,body{height:100%;}
+body{
+  font-family:"Comic Sans MS","Chalkboard SE","Microsoft JhengHei",sans-serif;
+  color:var(--ink); background:var(--cream);
+  background-image:
+    radial-gradient(circle at 12% 18%, rgba(61,123,253,.14), transparent 26%),
+    radial-gradient(circle at 88% 12%, rgba(255,157,61,.16), transparent 28%),
+    radial-gradient(circle at 80% 88%, rgba(160,107,255,.13), transparent 30%),
+    radial-gradient(circle at 15% 85%, rgba(62,207,110,.13), transparent 26%);
+  display:flex; align-items:center; justify-content:center; padding:14px;
+  user-select:none; -webkit-user-select:none; touch-action:manipulation;
+}
+#app{width:100%; max-width:680px;}
+.card{background:var(--card); border-radius:26px; padding:22px 20px;
+  box-shadow:0 6px 0 rgba(58,47,40,.14); text-align:center;}
+.fdbwa{display:inline-flex; gap:5px; margin-bottom:10px;}
+.fdbwa span{width:30px; height:30px; border-radius:9px; color:#fff; font-weight:bold;
+  display:flex; align-items:center; justify-content:center; font-size:16px;
+  box-shadow:0 3px 0 rgba(0,0,0,.15);}
+.badge{font-size:13px; color:#8a7b6d; margin-bottom:6px;}
+h1{font-size:clamp(24px,5.5vw,34px); margin:6px 0 4px;}
+h1 small{display:block; font-size:15px; color:#8a7b6d; font-weight:normal; margin-top:4px;}
+.bigbtn{display:inline-block; border:none; cursor:pointer; font-family:inherit;
+  font-size:clamp(18px,4.4vw,24px); font-weight:bold; color:#fff;
+  background:var(--blue); box-shadow:0 6px 0 var(--blue-edge);
+  border-radius:999px; padding:15px 42px; margin-top:14px; transition:transform .08s;}
+.bigbtn:active{transform:translateY(4px); box-shadow:0 2px 0 var(--blue-edge);}
+.rules{font-size:14px; color:#6d5f52; background:#fff3dd; border-radius:14px;
+  padding:10px 14px; margin-top:14px; text-align:left; line-height:1.7;}
+/* HUD */
+#hud{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px; flex-wrap:wrap;}
+.chip{background:#fff; border-radius:999px; padding:6px 13px; font-size:13px; font-weight:bold;
+  box-shadow:0 3px 0 rgba(58,47,40,.12);}
+#pips{display:flex; gap:5px; justify-content:center; margin-bottom:10px;}
+#pips i{width:14px; height:14px; border-radius:50%; background:#e8ddca; display:inline-block;}
+#pips i.ok{background:var(--green);} #pips i.no{background:var(--red);} #pips i.cur{background:var(--orange); transform:scale(1.25);}
+#timerwrap{height:10px; background:#efe5d2; border-radius:99px; overflow:hidden; margin-bottom:12px;}
+#timerbar{height:100%; width:100%; background:linear-gradient(90deg,var(--green),var(--orange)); border-radius:99px; transition:width .25s linear;}
+/* question */
+#qtype{font-size:13px; color:#8a7b6d; margin-bottom:8px;}
+#qtext{font-size:clamp(16px,4vw,20px); margin-bottom:14px; font-weight:bold;}
+#expr{font-size:clamp(22px,6vw,32px); margin:10px 0 18px; line-height:1.2; display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:6px;}
+.hl{border-radius:12px; padding:2px 8px;}
+.hl.b{background:#dbe7ff;} .hl.o{background:#ffedd6;}
+/* stacked fractions */
+.fr{display:inline-flex; flex-direction:column; align-items:center; vertical-align:middle; margin:0 2px;}
+.fr .n{padding:0 4px 1px;}
+.fr .bar{width:100%; height:3px; background:currentColor; border-radius:2px;}
+.fr .d{padding:1px 4px 0;}
+.whole{margin-right:1px;}
+.op{margin:0 4px;}
+/* options */
+#opts{display:grid; gap:12px; grid-template-columns:1fr;}
+.opt{border:none; cursor:pointer; font-family:inherit; font-size:clamp(16px,4.2vw,21px); font-weight:bold;
+  color:var(--ink); background:#fff; border-radius:18px; padding:14px 16px; min-height:64px;
+  box-shadow:0 5px 0 #e2d6c2; display:flex; align-items:center; justify-content:center; gap:6px; flex-wrap:wrap; transition:transform .08s;}
+.opt:active{transform:translateY(3px); box-shadow:0 2px 0 #e2d6c2;}
+.opt.correct{background:#d9f7e3; box-shadow:0 5px 0 var(--green-edge); animation:pop .3s;}
+.opt.wrong{background:#ffe1e1; box-shadow:0 5px 0 var(--red-edge); animation:shake .35s;}
+.opt.dim{opacity:.55;}
+@keyframes pop{50%{transform:scale(1.06);}}
+@keyframes shake{20%{transform:translateX(-7px);}40%{transform:translateX(7px);}60%{transform:translateX(-5px);}80%{transform:translateX(5px);}}
+#fb{min-height:26px; font-size:16px; font-weight:bold; margin-top:12px;}
+#fb.good{color:var(--green-edge);} #fb.bad{color:var(--red-edge);}
+/* end */
+#face{font-size:60px; margin:8px 0;}
+.stars{font-size:34px; letter-spacing:6px; margin:6px 0;}
+#scoreline{font-size:16px; color:#6d5f52; margin-bottom:8px;}
+#review{text-align:left; background:#fff6e8; border-radius:16px; padding:12px 14px; margin-top:12px; font-size:14px; line-height:1.8;}
+#review h3{font-size:15px; margin-bottom:6px;}
+.rv-item{border-bottom:1px dashed #e2d2b6; padding:6px 0;}
+.rv-item:last-child{border-bottom:none;}
+.rv-x{color:var(--red-edge);} .rv-ok{color:var(--green-edge);}
+#sndbtn{position:fixed; top:10px; right:12px; border:none; background:#fff; border-radius:999px;
+  width:44px; height:44px; font-size:20px; box-shadow:0 3px 0 rgba(58,47,40,.15); cursor:pointer;}
+#confetti{position:fixed; inset:0; pointer-events:none; overflow:hidden;}
+.cf{position:absolute; width:10px; height:14px; border-radius:3px; animation:fall linear forwards;}
+@keyframes fall{to{transform:translateY(105vh) rotate(720deg); opacity:.7;}}
+.footer{font-size:12px; color:#a4937f; margin-top:14px; text-align:center;}
+@media (prefers-reduced-motion: reduce){
+  .opt.correct,.opt.wrong{animation:none;} .cf{display:none;}
+  #timerbar{transition:none;} .bigbtn{transition:none;}
+}
+</style>
+</head>
+<body>
+<button id="sndbtn" aria-label="sound toggle">🔊</button>
+<div id="confetti"></div>
+<div id="app"></div>
+<script>
+"use strict";
+var $ = function(s){ return document.querySelector(s); };
+var app = $("#app");
+var SOUND = true;
+var TOTAL = 10, PER_Q = 40;
+
+/* ============ GEN-BEGIN (pure generators, no DOM) ============ */
+function ri(a,b){ return a + Math.floor(Math.random()*(b-a+1)); }
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function shuffle(arr){ var a=arr.slice(); for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+function gcd(a,b){ while(b){ var t=a%b; a=b; b=t; } return a; }
+
+var DENOMS=[4,5,6,8,10];
+
+/* ---- helper: exact fraction string ---- */
+function fracStr(n,d){ return n+"/"+d; }
+
+/* ---- Q type A: 短除法 GCD ---- */
+function genGcdQ(){
+  var a,b,g,tries=0;
+  do{
+    g=ri(2,6);
+    a=g*ri(2,6); b=g*ri(2,6);
+    tries++;
+  }while((gcd(a,b)!==g || a===b || a>36 || b>36) && tries<200);
+  if(gcd(a,b)!==g || a===b){ // fallback
+    g=2; a=8; b=12;
+  }
+  var l=lcmOf(a,b);
+  var wrongSet={}; wrongSet[g]=1; wrongSet[1]=1;
+  var wrongs=[];
+  if(l!==g && l<=200){ wrongs.push(l); wrongSet[l]=1; }
+  [Math.min(a,b),2,3,4,6].forEach(function(x){ if(!wrongSet[x]&&x!==g&&x>0){ wrongSet[x]=1; wrongs.push(x); } });
+  wrongs=shuffle(wrongs).slice(0,2);
+  while(wrongs.length<2){ var cand=g+wrongs.length; if(!wrongSet[cand]){ wrongSet[cand]=1; wrongs.push(cand);} }
+  var all=shuffle([g].concat(wrongs));
+  return {type:"gcd", nums:{a:a,b:b,g:g},
+    qtext:"用短除法找出 "+a+" 同 "+b+" 嘅最大公因數（GCD）。",
+    hintText:"💡 提示：短除法用公因數一步步除（2、3、…），除到互質為止，左邊除數全部乘起。試吓 "+a+" ÷ "+g+" = "+(a/g)+"，"+b+" ÷ "+g+" = "+(b/g)+"。",
+    opts:all.map(String), ans:all.indexOf(g),
+    review:"GCD("+a+","+b+") = "+g};
+}
+function lcmOf(a,b){ return a*b/gcd(a,b); }
+
+/* ---- Q type B: 通分（等值分數）---- */
+function genRenameQ(){
+  var d1=pick(DENOMS), d2, L, tries=0;
+  do{
+    d2=pick(DENOMS);
+    L=lcmOf(d1,d2);
+    tries++;
+  }while((d2===d1 || L===d1) && tries<100);  // need a real 擴分: L must exceed d1
+  if(d2===d1 || L===d1){ d1=4; d2=6; L=12; } // guaranteed fallback
+  var n1=ri(1,d1-1);
+  var factor=L/d1;
+  var correctN=n1*factor;
+  var correct=fracStr(correctN,L);
+  var wrongSet={}; wrongSet[correct]=1;
+  var wrongs=[];
+  function addW(s){ if(s!==correct && !wrongSet[s] && /^\d+\/\d+$/.test(s)){ wrongSet[s]=1; wrongs.push(s); } }
+  addW(fracStr(n1,L));            // 分子唔變（經典錯）
+  addW(fracStr(n1*(L/d2),L));     // 用錯倍數
+  addW(fracStr(correctN+1,L));
+  addW(fracStr(Math.max(1,correctN-1),L));
+  wrongs=shuffle(wrongs).slice(0,2);
+  var kk=2;
+  while(wrongs.length<2 && kk<40){ addW(fracStr(correctN+kk,L)); kk++; }
+  var all=shuffle([correct].concat(wrongs));
+  return {type:"rename", nums:{n1:n1,d1:d1,d2:d2,L:L,factor:factor},
+    qtext:"把 "+n1+"/"+d1+" 通分成分母係 "+L+" 嘅等值分數。（為 "+n1+"/"+d1+" 同 ?/"+d2+" 找公分母 "+L+"）",
+    hintText:"💡 提示：分母 "+d1+" 要乘 "+factor+" 先變成 "+L+"，所以分子都要乘 "+factor+"："+n1+" × "+factor+" = "+correctN,
+    opts:all, ans:all.indexOf(correct),
+    review:n1+"/"+d1+" = ("+n1+"×"+factor+")/("+d1+"×"+factor+") = "+correctN+"/"+L};
+}
+
+/* ---- Q type C: 分數減法 ---- */
+function genSubQ(){
+  var d1,d2,L,n1,n2,num,tries=0;
+  do{
+    d1=pick(DENOMS);
+    do{ d2=pick(DENOMS); }while(d2===d1);
+    L=lcmOf(d1,d2);
+    n1=ri(1,d1-1); n2=ri(1,d2-1);
+    num=n1*(L/d1) - n2*(L/d2);
+    tries++;
+  }while((num<=0 || gcd(num,L)!==1) && tries<300);
+  if(num<=0 || gcd(num,L)!==1){ // guaranteed fallback: 3/4 − 2/5 = 7/20
+    d1=4;d2=5;L=20;n1=3;n2=2;num=7;
+  }
+  var correct=fracStr(num,L);
+  var wrongSet={}; wrongSet[correct]=1;
+  var wrongs=[];
+  function addW2(s){ if(s!==correct && !wrongSet[s] && /^\d+\/\d+$/.test(s) && +s.split('/')[0]>0){ wrongSet[s]=1; wrongs.push(s); } }
+  addW2(fracStr(n1-n2>0?n1-n2:Math.abs(n1-n2)+1, L));  // 近似「分子減分子」錯
+  addW2(fracStr(num, d1*d2));                           // 公分母用錯（直接相乘但已約?）d1*d2 可能=lcm*...
+  if(d1*d2!==L) addW2(fracStr(num+(L/d1),L));           // 擴分計多咗
+  addW2(fracStr(Math.max(1,num-1),L));
+  addW2(fracStr(num+1,L));
+  wrongs=shuffle(wrongs).slice(0,2);
+  var k=2;
+  while(wrongs.length<2 && k<30){ addW2(fracStr(num+k,L)); k++; }
+  var all=shuffle([correct].concat(wrongs));
+  return {type:"sub", nums:{n1:n1,d1:d1,n2:n2,d2:d2,L:L,num:num},
+    qtext:"計一計：先通分，再減（分母不變，只減分子）。",
+    hintText:"💡 提示：公分母係 "+L+"。"+n1+"/"+d1+" = "+(n1*(L/d1))+"/"+L+"，"+n2+"/"+d2+" = "+(n2*(L/d2))+"/"+L+"，然後 "+(n1*(L/d1))+" − "+(n2*(L/d2))+" = "+num,
+    opts:all, ans:all.indexOf(correct),
+    review:n1+"/"+d1+" − "+n2+"/"+d2+" = "+(n1*(L/d1))+"/"+L+" − "+(n2*(L/d2))+"/"+L+" = "+num+"/"+L};
+}
+
+function genQuestion(i){
+  var r=i%10;
+  if(r<4) return genGcdQ();
+  if(r<7) return genRenameQ();
+  return genSubQ();
+}
+/* ============ GEN-END ============ */
+
+/* ---------- fraction rendering ---------- */
+function fr(n,d){ return '<span class="fr"><span class="n">'+n+'</span><span class="bar"></span><span class="d">'+d+'</span></span>'; }
+function termHTML(t,first){
+  var s = first ? '' : '<span class="op">'+(t.sign==='+'?'+':'−')+'</span>';
+  var body='';
+  if(t.w>0){ body += '<span class="whole">'+t.w+'</span>'+fr(t.n,t.d); }
+  else { body += fr(t.n,t.d); }
+  return s+body;
+}
+function exprHTML(e,hlPair){
+  var out='';
+  for(var i=0;i<e.terms.length;i++){
+    var cls = hlPair && hlPair.indexOf(i)>=0 ? (i===0||i===2?'hl b':'hl o') : '';
+    out += '<span class="'+cls+'">'+termHTML(e.terms[i], i===0)+'</span>';
+  }
+  return out;
+}
+function optHTML(o){
+  return String(o).replace(/(\d+\/\d+)/g, function(m){ var p=m.split('/'); return fr(p[0],p[1]); });
+}
+
+/* ---------- audio ---------- */
+var actx=null;
+function beep(freq,dur,type,vol){
+  if(!SOUND) return;
+  try{
+    actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+    var o=actx.createOscillator(), g=actx.createGain();
+    o.type=type||"sine"; o.frequency.value=freq;
+    g.gain.setValueAtTime(vol||0.15, actx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, actx.currentTime+(dur||0.2));
+    o.connect(g); g.connect(actx.destination);
+    o.start(); o.stop(actx.currentTime+(dur||0.2));
+  }catch(e){}
+}
+function chimeGood(){ beep(660,.15); setTimeout(function(){beep(880,.2);},120); }
+function chimeBad(){ beep(220,.25,"triangle"); }
+function fanfare(){ [523,659,784,1046].forEach(function(f,i){ setTimeout(function(){beep(f,.25);}, i*140); }); }
+
+/* ---------- confetti ---------- */
+function confetti(){
+  if(window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  var wrap=$("#confetti"); if(!wrap) return;
+  var colors=["#3d7bfd","#ff9d3d","#3ecf6e","#a06bff","#ff5d5d"];
+  for(var i=0;i<40;i++){
+    var c=document.createElement("div"); c.className="cf";
+    c.style.left=Math.random()*100+"vw"; c.style.top="-20px";
+    c.style.background=colors[i%colors.length];
+    c.style.animationDuration=(1.2+Math.random()*1.4)+"s";
+    wrap.appendChild(c);
+    (function(el){ setTimeout(function(){ el.remove(); },3000); })(c);
+  }
+}
+
+/* ---------- state ---------- */
+var qi=0, hearts=5, score=0, firstTry=[], questions=[], timer=null, timeLeft=PER_Q, locked=false;
+var TOTAL_STARS = parseInt(localStorage.getItem("fdbwa_frac_stars")||"0",10);
+
+/* ---------- screens ---------- */
+function screenStart(){
+  app.innerHTML =
+  '<div class="card">'+
+    '<div class="fdbwa"><span style="background:#3d7bfd">F</span><span style="background:#ff5d5d">D</span><span style="background:#ff9d3d">B</span><span style="background:#3ecf6e">W</span><span style="background:#a06bff">A</span></div>'+
+    '<div class="badge">🏫 五邑工商總會學校 FDBWA · 小學數學 Primary Maths · P5C</div>'+
+    '<h1>分數通分小遊戲<small>Fraction Skill-Up! 短除法 · 通分 · 分數減法 💪</small></h1>'+
+    '<div class="rules">🎯 <b>點樣玩：</b>每題撳正確答案，配合工作紙內容。<br>'+
+    '🔵 <b>短除法 GCD 題：</b>用短除法搵最大公因數<br>'+
+    '🟢 <b>通分題：</b>把分數擴分成指定公分母<br>'+
+    '🟣 <b>分數減法題：</b>先通分，再減分子<br>'+
+    '❤️ 5 粒心心 · ⏰ 每題 40 秒 · 💡 每題可撳「攞提示」· 共 10 題</div>'+
+    '<div style="margin-top:8px;font-size:14px;color:#8a7b6d;">累積星數 ⭐ '+TOTAL_STARS+'</div>'+
+    '<button class="bigbtn" id="startbtn">開始遊戲 🚀</button>'+
+    '<div class="footer">P5 · 分數(三) 5N2 · 觸控操作 · Touch to play</div>'+
+  '</div>';
+  $("#startbtn").addEventListener("click", startRound);
+}
+
+function startRound(){
+  qi=0; hearts=5; score=0; firstTry=[];
+  questions=[];
+  var order=shuffle([0,1,2,3,4,5,6,7,8,9]);
+  for(var i=0;i<TOTAL;i++){ questions.push(genQuestion(order[i])); }
+  showQuestion();
+}
+
+function pipsHTML(){
+  var s='<div id="pips">';
+  for(var i=0;i<TOTAL;i++){
+    var c = i<qi ? (firstTry[i]?"ok":"no") : (i===qi?"cur":"");
+    s+='<i class="'+c+'"></i>';
+  }
+  return s+'</div>';
+}
+
+function showQuestion(){
+  locked=false; timeLeft=PER_Q;
+  var q=questions[qi];
+  var typeName = q.type==="gcd" ? "🔵 短除法 GCD 題" : (q.type==="rename" ? "🟢 通分題" : "🟣 分數減法題");
+  var exprLine;
+  if(q.type==="gcd"){
+    exprLine = '<div id="expr">'+q.nums.a+' 同 '+q.nums.b+'</div>';
+  }else if(q.type==="rename"){
+    exprLine = '<div id="expr">'+optHTML(q.nums.n1+'/'+q.nums.d1)+' <span class="op">→</span> ?/'+q.nums.L+'</div>';
+  }else{
+    exprLine = '<div id="expr">'+optHTML(q.nums.n1+'/'+q.nums.d1)+' <span class="op">−</span> '+optHTML(q.nums.n2+'/'+q.nums.d2)+' <span class="op">=</span> ?</div>';
+  }
+  var hintLine = '';
+  app.innerHTML =
+  '<div id="hud">'+
+    '<span class="chip">P5 · FDBWA</span>'+
+    '<span class="chip">第 '+(qi+1)+' / '+TOTAL+' 題</span>'+
+    '<span class="chip" id="hearts">'+ '❤️'.repeat(hearts) +'</span>'+
+    '<span class="chip">⭐ '+score+'</span>'+
+  '</div>'+
+  pipsHTML()+
+  '<div id="timerwrap"><div id="timerbar"></div></div>'+
+  '<div class="card">'+
+    '<div id="qtype">'+typeName+'</div>'+
+    '<div id="qtext">'+q.qtext+'</div>'+
+    exprLine + hintLine +
+    '<div id="opts"></div>'+
+    '<div id="hintbox" style="min-height:20px;font-size:14px;color:#7c48d8;font-weight:bold;margin-top:10px;"></div>'+
+    '<button id="hintbtn" style="border:none;cursor:pointer;font-family:inherit;font-size:15px;font-weight:bold;color:#7c48d8;background:#f1e9ff;border-radius:999px;padding:9px 22px;margin-top:6px;box-shadow:0 4px 0 #d9c8f5;">💡 唔識做？撳我呢度攞提示</button>'+
+    '<div id="fb"></div>'+
+  '</div>';
+  var opts=$("#opts");
+  q.opts.forEach(function(o,idx){
+    var b=document.createElement("button");
+    b.className="opt"; b.dataset.idx=idx;
+    b.innerHTML=optHTML(o);
+    b.addEventListener("click", function(){ onAnswer(idx,b); });
+    opts.appendChild(b);
+  });
+  var hb0=$("#hintbtn");
+  hb0.addEventListener("click", function(){
+    var hb=$("#hintbox");
+    if(hb){ hb.textContent=q.hintText; }
+    if(hb0) hb0.style.display="none";
+  });
+  startTimer();
+}
+
+function startTimer(){
+  clearInterval(timer);
+  var bar=$("#timerbar");
+  timer=setInterval(function(){
+    timeLeft-=0.25;
+    if(bar) bar.style.width=Math.max(0,(timeLeft/PER_Q)*100)+"%";
+    if(timeLeft<=0){ clearInterval(timer); if(!locked) onAnswer(-1,null); }
+  },250);
+}
+
+function onAnswer(idx,btn){
+  if(locked) return; locked=true; clearInterval(timer);
+  var q=questions[qi];
+  var ok = idx===q.ans;
+  var btns=document.querySelectorAll(".opt");
+  btns.forEach(function(b){
+    var i=parseInt(b.dataset.idx,10);
+    if(i===q.ans) b.classList.add("correct");
+    else b.classList.add("dim");
+  });
+  if(btn && !ok) btn.classList.add("wrong");
+  var fb=$("#fb");
+  if(ok){
+    var bonus=Math.max(0,Math.round(timeLeft))*5;
+    var first = firstTry.length===qi; // no prior wrong on this q
+    if(first){ firstTry.push(true); score += 100+bonus; }
+    fb.className="good"; fb.textContent="✔ 答啱喇！勁呀！ Well done! 🎉 (+"+(100+bonus)+")";
+    chimeGood(); confetti();
+  }else{
+    firstTry.push(false);
+    hearts=Math.max(0,hearts-1);
+    $("#hearts").textContent='❤️'.repeat(hearts)||"💔";
+    fb.className="bad";
+    fb.textContent = idx===-1 ? "⏰ 慢慢嚟，唔緊要！睇吓點做： "+q.review : "❌ 唔緊要，再試吓 💪 睇吓正解："+q.review;
+    chimeBad();
+  }
+  setTimeout(function(){
+    qi++;
+    if(qi>=TOTAL || hearts<=0){ endRound(); }
+    else { showQuestion(); }
+  }, ok?1300:2600);
+}
+
+function endRound(){
+  clearInterval(timer);
+  var stars=0; var got=firstTry.filter(Boolean).length;
+  if(got>=9) stars=3; else if(got>=7) stars=2; else if(got>=4) stars=1;
+  TOTAL_STARS+=stars; localStorage.setItem("fdbwa_frac_stars",String(TOTAL_STARS));
+  var face = stars===3?"🏆":(stars>=1?"🌟":"🎈");
+  var reviewHTML="";
+  questions.forEach(function(q,i){
+    if(!firstTry[i]){
+      var exprTxt = q.type==="gcd" ? (q.nums.a+" 同 "+q.nums.b+" 嘅 GCD")
+                  : q.type==="rename" ? (q.nums.n1+"/"+q.nums.d1+" 通分成 /"+q.nums.L)
+                  : (q.nums.n1+"/"+q.nums.d1+" − "+q.nums.n2+"/"+q.nums.d2);
+      reviewHTML+='<div class="rv-item">'+ (i+1) +'. '+exprTxt+'<br><span class="rv-ok">✔ 正解：'+q.review+'</span></div>';
+    }
+  });
+  app.innerHTML =
+  '<div class="card">'+
+    '<div class="fdbwa"><span style="background:#3d7bfd">F</span><span style="background:#ff5d5d">D</span><span style="background:#ff9d3d">B</span><span style="background:#3ecf6e">W</span><span style="background:#a06bff">A</span></div>'+
+    '<div id="face">'+face+'</div>'+
+    '<div class="stars">'+'★'.repeat(stars)+'☆'.repeat(3-stars)+'</div>'+
+    '<div id="scoreline">首次答啱 '+got+' / '+TOTAL+' 題 · 得分 '+score+' · 累積 ⭐ '+TOTAL_STARS+'</div>'+
+    (got>=9?"太犀利喇！Super! 🎉":(got>=6?"好叻呀！繼續加油！💪":"唔緊要，多練幾次一定得！🌱"))+
+    (reviewHTML? '<div id="review"><h3>📖 要重溫嘅題目 Questions to review</h3>'+reviewHTML+'</div>':'')+
+    '<button class="bigbtn" id="againbtn">再玩一次 🔁</button>'+
+    '<div class="footer">五邑工商總會學校 FDBWA · P5C 分數(三)</div>'+
+  '</div>';
+  if(stars>=2){ fanfare(); confetti(); }
+  $("#againbtn").addEventListener("click", startRound);
+}
+
+$("#sndbtn").addEventListener("click", function(){
+  SOUND=!SOUND; this.textContent=SOUND?"🔊":"🔇";
+});
+
+screenStart();
+</script>
+</body>
+</html>
