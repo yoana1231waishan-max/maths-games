@@ -159,6 +159,93 @@
     background: #f3ede2; color: var(--muted); border: none; border-radius: 10px;
     font-size: 0.95rem; font-family: inherit; cursor: pointer;
   }
+
+  /* ============ Feature panels (music / TTS / journal) ============ */
+  .panel {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 16px;
+    margin-top: 16px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  }
+  .panel > h2 {
+    font-size: 1.05rem; color: var(--accent);
+    margin-bottom: 4px; display: flex; align-items: center; gap: 6px;
+  }
+  .panel .sub { font-size: 0.76rem; color: var(--muted); margin-bottom: 12px; }
+
+  /* audio player */
+  .now-playing { font-size: 0.92rem; font-weight: 700; color: var(--ink); margin-bottom: 2px; }
+  .now-sub { font-size: 0.74rem; color: var(--muted); margin-bottom: 10px; }
+  .seek {
+    width: 100%; height: 26px; margin: 2px 0 8px;
+    -webkit-appearance: none; appearance: none; background: transparent;
+  }
+  .seek::-webkit-slider-runnable-track {
+    height: 5px; border-radius: 3px;
+    background: linear-gradient(to right, var(--accent) var(--pct, 0%), #e5ddd0 var(--pct, 0%));
+  }
+  .seek::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 15px; height: 15px; margin-top: -5px;
+    border-radius: 50%; background: var(--accent); border: 2px solid #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  }
+  .times { display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--muted); }
+  .transport { display: flex; align-items: center; gap: 8px; margin: 10px 0 6px; }
+  .tbtn {
+    flex: 1; padding: 10px 4px; border: 1px solid var(--line);
+    background: #f7f2e9; color: var(--ink); border-radius: 10px;
+    font-size: 1rem; cursor: pointer; font-family: inherit;
+    -webkit-appearance: none; appearance: none;
+  }
+  .tbtn:active { background: var(--accent-soft); }
+  .tbtn.play { background: var(--accent); color: #fff; border-color: var(--accent); font-size: 1.1rem; }
+  .vol-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 0.78rem; color: var(--muted); }
+  .vol { flex: 1; -webkit-appearance: none; appearance: none; height: 22px; background: transparent; }
+  .vol::-webkit-slider-runnable-track { height: 4px; border-radius: 2px; background: #e5ddd0; }
+  .vol::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 13px; height: 13px; margin-top: -4.5px;
+    border-radius: 50%; background: var(--accent);
+  }
+  .pl {
+    list-style: none; margin: 12px 0 0; max-height: 210px; overflow-y: auto;
+    -webkit-overflow-scrolling: touch; border-top: 1px solid var(--line); padding-top: 6px;
+  }
+  .pl li {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 4px; border-bottom: 1px solid #f0eae0;
+    font-size: 0.86rem; cursor: pointer;
+  }
+  .pl li:active { background: var(--accent-soft); }
+  .pl li.cur { color: var(--accent); font-weight: 700; }
+  .pl li .n { color: var(--muted); font-size: 0.74rem; min-width: 18px; }
+  .pl li.cur .n { color: var(--accent); }
+
+  textarea {
+    width: 100%; padding: 9px 10px; font-size: 0.9rem; font-family: inherit;
+    border: 1px solid var(--line); border-radius: 9px; background: #fffdf8; color: var(--ink);
+  }
+
+  /* journal */
+  #journal-area { min-height: 130px; resize: vertical; line-height: 1.7; }
+  .jmeta { font-size: 0.72rem; color: var(--muted); margin-top: 6px; }
+  .entries { list-style: none; margin: 12px 0 0; max-height: 300px; overflow-y: auto; }
+  .entries li {
+    border: 1px solid var(--line); border-radius: 10px;
+    padding: 10px 12px; margin-bottom: 8px; background: #fffdf8;
+  }
+  .entries .top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .entries .stamp { font-size: 0.72rem; color: var(--muted); }
+  .entries .body { font-size: 0.88rem; margin-top: 6px; white-space: pre-wrap; line-height: 1.65; }
+  .entries .acts { display: flex; gap: 6px; margin-top: 8px; }
+  .entries .acts button {
+    font-size: 0.74rem; padding: 5px 10px; border-radius: 7px;
+    border: 1px solid var(--line); background: #f7f2e9; color: var(--ink);
+    cursor: pointer; font-family: inherit;
+  }
+  .entries .acts .del { color: #a33; }
+  .hint { font-size: 0.72rem; color: var(--muted); margin-top: 6px; }
 </style>
 </head>
 <body>
@@ -185,6 +272,48 @@
     <div>日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div>
   </div>
   <div id="cal-body"></div>
+</section>
+
+<!-- ===== 純音樂播放 ===== -->
+<section class="panel" id="music-panel">
+  <h2>🎵 純音樂播放</h2>
+  <div class="sub">福音電台 FYDT · 純音樂（i.mp3）· 慢板柔和</div>
+
+  <div class="now-playing" id="np-title">選擇詩歌開始播放</div>
+  <div class="now-sub" id="np-sub">按播放鍵開始</div>
+
+  <input type="range" class="seek" id="seek" value="0" min="0" max="100" step="0.1" aria-label="播放進度">
+  <div class="times"><span id="t-cur">0:00</span><span id="t-dur">0:00</span></div>
+
+  <div class="transport">
+    <button class="tbtn" id="btn-prev" aria-label="上一首">⏮</button>
+    <button class="tbtn play" id="btn-play" aria-label="播放">▶</button>
+    <button class="tbtn" id="btn-next" aria-label="下一首">⏭</button>
+  </div>
+
+  <div class="vol-row">
+    <span>🔉</span>
+    <input type="range" class="vol" id="vol" min="0" max="100" value="80" aria-label="音量">
+    <span id="vol-val">80</span>
+  </div>
+
+  <ol class="pl" id="playlist"></ol>
+</section>
+
+<!-- ===== 靈修日記 ===== -->
+<section class="panel" id="journal-panel">
+  <h2>✍️ 靈修日記</h2>
+  <div class="sub">記下今日讀經的感動與反思（自動儲存於本機）</div>
+
+  <textarea id="journal-area" placeholder="今日經文讓我想到……"></textarea>
+  <div class="jmeta" id="journal-meta"></div>
+
+  <div class="btn-row">
+    <button class="btn btn-read" id="btn-save-journal">💾 儲存</button>
+    <button class="btn btn-link" id="btn-clear-journal">🗑 清除</button>
+  </div>
+
+  <ul class="entries" id="entries"></ul>
 </section>
 
 <p class="progress">
@@ -403,6 +532,109 @@ const PASSAGES = {
 };
 </script>
 <script>
+const PLAYLIST = [
+{
+"title": "不朽不灭的雅伟",
+"url": "https://fuyindiantai.org/wp-content/uploads/2026/10/S04_025i.mp3",
+"file": "S04_025i.mp3",
+"variant": "instrumental",
+"bpm": 146.3
+},
+{
+"title": "分别为圣",
+"url": "https://fuyindiantai.org/wp-content/uploads/2026/09/S04_024i.mp3",
+"file": "S04_024i.mp3",
+"variant": "instrumental",
+"bpm": 50.0
+},
+{
+"title": "要得雅伟的喜悦",
+"url": "https://fuyindiantai.org/wp-content/uploads/2026/08/S04_023i.mp3",
+"file": "S04_023i.mp3",
+"variant": "instrumental",
+"bpm": 60.0
+},
+{
+"title": "奋勇刚强",
+"url": "https://fuyindiantai.org/wp-content/uploads/2026/07/S03_072i.mp3",
+"file": "S03_072i.mp3",
+"variant": "instrumental",
+"bpm": 48.4
+},
+{
+"title": "基督被高举",
+"url": "https://fuyindiantai.org/wp-content/uploads/2026/02/S04_022i.mp3",
+"file": "S04_022i.mp3",
+"variant": "instrumental",
+"bpm": 89.6
+},
+{
+"title": "神的爱",
+"url": "https://fuyindiantai.org/wp-content/uploads/2025/11/S04_021i.mp3",
+"file": "S04_021i.mp3",
+"variant": "instrumental",
+"bpm": 42.6
+},
+{
+"title": "谦卑事奉",
+"url": "https://fuyindiantai.org/wp-content/uploads/2025/06/S03_070i.mp3",
+"file": "S03_070i.mp3",
+"variant": "instrumental",
+"bpm": 69.8
+},
+{
+"title": "耶稣 神的羔羊",
+"url": "https://fuyindiantai.org/wp-content/uploads/2025/03/S04_019i.mp3",
+"file": "S04_019i.mp3",
+"variant": "instrumental",
+"bpm": 50.0
+},
+{
+"title": "警醒祷告",
+"url": "https://fuyindiantai.org/wp-content/uploads/2025/02/S03_069i.mp3",
+"file": "S03_069i.mp3",
+"variant": "instrumental",
+"bpm": null
+},
+{
+"title": "我唯一所需要",
+"url": "https://fuyindiantai.org/wp-content/uploads/2025/01/S04_018i.mp3",
+"file": "S04_018i.mp3",
+"variant": "instrumental",
+"bpm": null
+},
+{
+"title": "看见",
+"url": "https://fuyindiantai.org/wp-content/uploads/2024/11/S03_067i.mp3",
+"file": "S03_067i.mp3",
+"variant": "instrumental",
+"bpm": null
+},
+{
+"title": "当刚强非常壮胆",
+"url": "https://fuyindiantai.org/wp-content/uploads/2024/10/S04_017i.mp3",
+"file": "S04_017i.mp3",
+"variant": "instrumental",
+"bpm": null
+},
+{
+"title": "奔跑同得胜",
+"url": "https://fuyindiantai.org/wp-content/uploads/2024/06/S03_065i.mp3",
+"file": "S03_065i.mp3",
+"variant": "instrumental",
+"bpm": null
+},
+{
+"title": "自由",
+"url": "https://fuyindiantai.org/wp-content/uploads/2024/05/S03_064i.mp3",
+"file": "S03_064i.mp3",
+"variant": "instrumental",
+"bpm": null
+}
+];
+</script>
+
+<script>
 const YEAR = 2026, MONTH = 9;            // 9 = October
 const PLAN = {
   1:"太6:16-18", 2:"太6:19-24", 3:"太6:25-34", 4:"詩107",
@@ -541,6 +773,272 @@ document.getElementById("overlay").onclick = function (e) {
 
 renderCal();
 updateProgress();
+
+/* ============================================================
+   Feature 1 — 純音樂播放 (playlist from fuyindiantai.org)
+   ============================================================ */
+(function musicPlayer() {
+  var audio = new Audio();
+  audio.preload = "none";
+  var idx = -1, started = false;
+  var VKEY = "devotion-volume";
+
+  var elTitle = document.getElementById("np-title");
+  var elSub   = document.getElementById("np-sub");
+  var elSeek  = document.getElementById("seek");
+  var elCur   = document.getElementById("t-cur");
+  var elDur   = document.getElementById("t-dur");
+  var btnPlay = document.getElementById("btn-play");
+  var elList  = document.getElementById("playlist");
+
+  function fmt(s) {
+    if (!isFinite(s) || s < 0) s = 0;
+    var m = Math.floor(s / 60), x = Math.floor(s % 60);
+    return m + ":" + (x < 10 ? "0" : "") + x;
+  }
+
+  /* ---------- playlist filtering ----------
+     Instrumental = the "i" variant published by the site:
+        S03_070.mp3    vocal / main
+        S03_070i.mp3   instrumental   <- played here
+        S03_070m.mp3   alternate mix
+     The "i" is glued to the DIGITS, so this tests the stem suffix and
+     never a separator. A `variant` field, when present, wins.
+     Tempo / loudness / brightness are carried as display metadata only
+     and never used to exclude a track. */
+  function isInstrumental(track) {
+    if (track.variant) return track.variant === "instrumental";
+    var f = (track.file || track.url || "");
+    var stem = f.split("/").pop().replace(/\.mp3$/i, "").toLowerCase();
+    if (/m_piano$/.test(stem)) return false;
+    return /i$/.test(stem);
+  }
+
+  function activeList() {
+    if (typeof PLAYLIST === "undefined" || !PLAYLIST.length) return [];
+    return PLAYLIST.filter(isInstrumental);
+  }
+
+  function buildList() {
+    if (typeof PLAYLIST === "undefined" || !PLAYLIST.length) {
+      elList.innerHTML = '<li style="color:#a33">播放清單暫時無法載入</li>';
+      return;
+    }
+    var list = activeList();
+    if (!list.length) {
+      elList.innerHTML = '<li style="color:#a33">沒有符合條件的純音樂</li>';
+      return;
+    }
+    elList.innerHTML = "";
+    list.forEach(function (s, i) {
+      var li = document.createElement("li");
+      var meta = [];
+      if (s.bpm) meta.push("♪ " + Math.round(s.bpm));
+      var label = '<span class="n">' + (i + 1) + '</span><span>' + s.title +
+                  (meta.length ? '<em style="font-style:normal;color:#9aa8ae;font-size:.72rem;margin-left:6px">' +
+                                 meta.join(" · ") + "</em>" : "") + "</span>";
+      li.innerHTML = label;
+      li.onclick = function () { load(i, true); };
+      elList.appendChild(li);
+    });
+    if (typeof idx !== "undefined" && idx >= list.length) idx = -1;
+    window.__playlist = list;
+  }
+
+  function markCur() {
+    var kids = elList.children;
+    for (var i = 0; i < kids.length; i++) {
+      kids[i].className = (i === idx ? "cur" : "");
+    }
+  }
+
+  function load(i, autoplay) {
+    var list = activeList();
+    if (i < 0) i = list.length - 1;
+    if (i >= list.length) i = 0;
+    idx = i;
+    var s = list[i];
+    audio.src = s.url;
+    elTitle.textContent = s.title;
+    elSub.textContent = "曲目 " + (i + 1) + " / " + list.length;
+    elSeek.value = 0; elSeek.style.setProperty("--pct", "0%");
+    elCur.textContent = "0:00"; elDur.textContent = "0:00";
+    markCur();
+    if (autoplay) {
+      started = true;
+      var p = audio.play();
+      if (p && p.catch) {
+        p.catch(function () {
+          // autoplay blocked (iOS needs a user gesture) — first tap counts
+          started = false;
+          btnPlay.textContent = "▶";
+        });
+      }
+    }
+  }
+
+  btnPlay.onclick = function () {
+    if (idx < 0) { load(0, true); return; }
+    if (audio.paused) {
+      started = true;
+      var p = audio.play();
+      if (p && p.catch) p.catch(function () { elSub.textContent = "請再按一次播放"; });
+    } else {
+      audio.pause();
+    }
+  };
+
+  document.getElementById("btn-next").onclick = function () { load(idx + 1, true); };
+  document.getElementById("btn-prev").onclick = function () {
+    // restart the track first, like a normal player
+    if (audio.currentTime > 3) { audio.currentTime = 0; return; }
+    load(idx - 1, true);
+  };
+
+  elSeek.oninput = function () {
+    if (audio.duration) {
+      audio.currentTime = (elSeek.value / 100) * audio.duration;
+    }
+  };
+
+  var vol = document.getElementById("vol");
+  var volVal = document.getElementById("vol-val");
+  var saved = localStorage.getItem(VKEY);
+  if (saved !== null) vol.value = saved;
+  volVal.textContent = vol.value;
+  audio.volume = vol.value / 100;
+  vol.oninput = function () {
+    audio.volume = vol.value / 100;
+    volVal.textContent = vol.value;
+    localStorage.setItem(VKEY, vol.value);
+  };
+
+  audio.addEventListener("timeupdate", function () {
+    if (!audio.duration) return;
+    var pct = (audio.currentTime / audio.duration) * 100;
+    elSeek.value = pct;
+    elSeek.style.setProperty("--pct", pct + "%");
+    elCur.textContent = fmt(audio.currentTime);
+    elDur.textContent = fmt(audio.duration);
+  });
+
+  audio.addEventListener("play",  function () { btnPlay.textContent = "⏸"; });
+  audio.addEventListener("pause", function () { btnPlay.textContent = "▶"; });
+
+  // sequential playback: advance on end, loop the list
+  audio.addEventListener("ended", function () { load(idx + 1, true); });
+
+  audio.addEventListener("error", function () {
+    elSub.textContent = "這首無法播放，自動跳下一首…";
+    setTimeout(function () { if (idx < activeList().length - 1) load(idx + 1, true); }, 1200);
+  });
+
+  buildList();
+  window.__music = { audio: audio, load: load };
+})();
+
+/* ============================================================
+   Feature 3 — 靈修日記 (LocalStorage)
+   ============================================================ */
+(function journal() {
+  var JKEY = "devotion-journal-2026-10";
+  var area = document.getElementById("journal-area");
+  var meta = document.getElementById("journal-meta");
+  var list = document.getElementById("entries");
+
+  function load() {
+    try { return JSON.parse(localStorage.getItem(JKEY) || "[]"); } catch (e) { return []; }
+  }
+  function save(a) { localStorage.setItem(JKEY, JSON.stringify(a)); }
+
+  function stampNow() {
+    var d = new Date();
+    function p(n) { return n < 10 ? "0" + n : "" + n; }
+    return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()) +
+           " " + p(d.getHours()) + ":" + p(d.getMinutes());
+  }
+
+  // today's ref for context on each entry
+  function refLabel(day) {
+    if (day && PLAN[day]) return PLAN[day];
+    return "—";
+  }
+
+  function render() {
+    var arr = load();
+    list.innerHTML = "";
+    if (!arr.length) {
+      list.innerHTML = '<li style="border:none;background:none;color:#6b7a82">尚未有任何日記</li>';
+      return;
+    }
+    arr.slice().reverse().forEach(function (e) {
+      var li = document.createElement("li");
+      var head = document.createElement("div");
+      head.className = "top";
+      head.innerHTML = '<span class="stamp">' + e.stamp + "</span>" +
+                       '<span class="stamp">' + e.ref + "</span>";
+      var body = document.createElement("div");
+      body.className = "body";
+      body.textContent = e.text;
+      var acts = document.createElement("div");
+      acts.className = "acts";
+      var edit = document.createElement("button");
+      edit.textContent = "編輯";
+      var del = document.createElement("button");
+      del.className = "del";
+      del.textContent = "刪除";
+      acts.appendChild(edit); acts.appendChild(del);
+
+      edit.onclick = function () {
+        var t = prompt("修改日記", e.text);
+        if (t === null) return;
+        var a = load();
+        for (var i = 0; i < a.length; i++) {
+          if (a[i].id === e.id) { a[i].text = t; a[i].stamp = stampNow(); }
+        }
+        save(a); render();
+      };
+      del.onclick = function () {
+        if (!confirm("確定刪除這則日記？")) return;
+        var a = load().filter(function (x) { return x.id !== e.id; });
+        save(a); render();
+      };
+
+      li.appendChild(head); li.appendChild(body); li.appendChild(acts);
+      list.appendChild(li);
+    });
+  }
+
+  document.getElementById("btn-save-journal").onclick = function () {
+    var txt = area.value.trim();
+    if (!txt) { alert("請先寫下內容"); return; }
+    var a = load();
+    a.push({
+      id: Date.now(),
+      stamp: stampNow(),
+      ref: refLabel(todayDay),
+      text: txt
+    });
+    save(a);
+    area.value = "";
+    meta.textContent = "已儲存 " + a.length + " 則日記";
+    render();
+  };
+
+  document.getElementById("btn-clear-journal").onclick = function () {
+    if (!area.value) return;
+    if (confirm("清除輸入框內容？")) { area.value = ""; meta.textContent = ""; }
+  };
+
+  // draft persistence: keep unsaved text across refresh
+  area.addEventListener("input", function () {
+    localStorage.setItem("devotion-journal-draft", area.value);
+  });
+  var draft = localStorage.getItem("devotion-journal-draft");
+  if (draft) { area.value = draft; meta.textContent = "（有未儲存的草稿）"; }
+
+  render();
+})();
 </script>
 </body>
 </html>
